@@ -1,13 +1,15 @@
+import java.util.Arrays;
+
 public class CrossIntBitPacking {
-    final private int[] data;
-    final private int nOfBitsPerValue;
-    
+    private int[] data;
+    private int nOfBitsPerValue;
 
-    public CrossIntBitPacking(int nOfValues, int bitsPerValue) {
+    public void compress(int[] arr){
 
-        nOfBitsPerValue = bitsPerValue;
+        int max = Arrays.stream(arr).max().getAsInt();
+        nOfBitsPerValue = 32 - Integer.numberOfLeadingZeros(max);
         // Compute the number of integers(size of data) necessary for the compression by doing a ceiling boundary
-        int nOfRequiredIntegers = (nOfBitsPerValue*nOfValues+31)/32;
+        int nOfRequiredIntegers = (nOfBitsPerValue*arr.length+31)/32;
         data = new int[nOfRequiredIntegers];
 
         //(Need to be checked/refined) Create mask then put all bits of data to 0
@@ -16,27 +18,24 @@ public class CrossIntBitPacking {
             data[i] &= ~mask;
         }
 
-    }
+        for(int i=0; i<arr.length; i++){
+            int bitIndex = nOfBitsPerValue * i;
+            int intIndex = bitIndex/32;
+            int bitOffset = bitIndex%32;
 
-    public void compress(int index, int value){
+            data[intIndex] |= (arr[i] << bitOffset);
 
-        int bitIndex = nOfBitsPerValue * index;
-        int intIndex = bitIndex/32;
-        int bitOffset = bitIndex%32;
+            // Handle cross-integer bitpacking
 
-        data[intIndex] |= (value << bitOffset);
-
-        // Handle cross-integer bitpacking
-
-        if (nOfBitsPerValue > 32 - bitOffset){
-            data[intIndex + 1] |= (value >> (32 - bitOffset));
+            if (nOfBitsPerValue > 32 - bitOffset){
+                data[intIndex + 1] |= (arr[i] >> (32 - bitOffset));
+            }
         }
 
-
     }
 
-    // Gives negative numbers on some examples, to be corrected
-    int decompress(int index) {
+    
+    public int get(int index) {
 
         int bitIndex = nOfBitsPerValue * index;
         int byteIndex = bitIndex/32;
@@ -54,5 +53,13 @@ public class CrossIntBitPacking {
         
         return value;
     }
+
+    public void decompress(int[] arr){
+        for(int i=0; i<arr.length; i++){
+            arr[i] = get(i);
+        }        
+    }
+
+
 
 }

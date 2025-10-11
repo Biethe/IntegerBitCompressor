@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 public class Main {
     public static void main(String[] args) {
         int[] arr = new int[20];
@@ -23,36 +21,40 @@ public class Main {
         arr[17] = 47;
         arr[18] = 98;
         arr[19] = 100;
-                
-        int max = Arrays.stream(arr).max().getAsInt();
-        int nOfBitsPerValue = 32 - Integer.numberOfLeadingZeros(max);
-        int nOfValue = arr.length;
 
-        
+        int[] dec_arr = new int[20];
 
-        for (int i=0; i<nOfValue; i++){
+        CrossIntBitPacking bitpacker = new CrossIntBitPacking();
+
+        NonCrossIntBitPacking bitpacker1 = new NonCrossIntBitPacking();
+
+        bitpacker.compress(arr);
+        bitpacker.decompress(dec_arr);
+
+        for(int i=0; i<20; i++){
             System.out.print(arr[i] + " ");
         }
 
         System.out.println("Original array");
 
-        
-        CrossIntBitPacking bitpacker_1 = new CrossIntBitPacking(nOfValue, nOfBitsPerValue);
-
-        for (int i=0; i<nOfValue; i++){
-            bitpacker_1.compress(i, arr[i]);
-            System.out.print(bitpacker_1.decompress(i) + " ");
+        for(int i=0; i<20; i++){
+            System.out.print(dec_arr[i] + " ");
         }
-        System.out.println("CrossingBitPacking check");
 
-        
-        NonCrossIntBitPacking bitpacker_2 = new NonCrossIntBitPacking(nOfValue, nOfBitsPerValue);
+        System.out.println("Decompressed array with overlapping integers");
 
-        for (int i=0; i<nOfValue; i++){
-            bitpacker_2.compress(i, arr[i]);
-            System.out.print(bitpacker_2.decompress(i) + " ");
+        bitpacker1.compress(arr);
+        bitpacker1.decompress(dec_arr);
+
+        for(int i=0; i<20; i++){
+            System.out.print(dec_arr[i] + " ");
         }
-        System.out.println("NonCrossingBitPacking check");
+
+        System.out.println("Decompressed array with non-overlapping integers");
+
+
+                
+
 
     }
 }

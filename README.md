@@ -26,7 +26,7 @@ This produces `.class` files for all sources in the repository.
 ## Running the Programs
 
 ### Compression Demo (`Main`)
-Allows you to supply an integer array either from standard input or a file, compress it with the auto-selected strategy, and print the decompressed output with timing information.
+Allows you to supply an integer array either from standard input or a file (or generate sample inputs), compress it with the auto-selected strategy, and print the decompressed output with timing information plus an automatic integrity check between original and reconstructed arrays.
 
 ```bash
 # From stdin (terminate input with Ctrl+D on Unix/macOS or Ctrl+Z then Enter on Windows)
@@ -35,9 +35,19 @@ java Main
 
 # From a file (values can be separated by whitespace or commas)
 java Main path/to/values.txt
+
+# Generate ready-made sample files (default directory `sample-data` and 16 elements per file)
+java Main --generate-samples
+
+# Custom sample size (still written to `sample-data`)
+java Main --generate-samples 10000
+
+# Custom output directory and sample size
+java Main --generate-samples custom-samples 256
 ```
 
 The output prints the decompressed array and the time spent compressing/decompressing in milliseconds.
+When using file/stdin input, the program now also reports whether decompression perfectly matches the original data and, if not, pinpoints the first mismatch.
 
 ### Benchmark Harness (`CompressionPerformanceEvaluator`)
 Generates random positive arrays, runs every `BitPacking` strategy, and estimates performance as well as network-transmission savings.

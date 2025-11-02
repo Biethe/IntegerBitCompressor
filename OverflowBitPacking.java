@@ -18,7 +18,7 @@ class OverflowBitPacking implements BitPacking{
 
         for(int i= 0; i < arr.length; i++){
             bitArr[i] = 32 - Integer.numberOfLeadingZeros(arr[i]);
-            if(Integer.numberOfLeadingZeros(arr[i]) == 0){
+            if(arr[i] == 0){
                 bitArr[i] = 1;
             }
         }
@@ -74,19 +74,16 @@ class OverflowBitPacking implements BitPacking{
             int intIndex = bitIndex/32;
             int bitOffset = bitIndex%32;
 
-            data[intIndex] |= (normalArea[i] << bitOffset);
+            int encodedValue = normalArea[i];
             if(normalArea[i] != arr[i]){
-                data[intIndex] |= (1 << (nOfBitsPerValue-1)) << (bitOffset);
-            }   
-            // Handle cross-integer bitpacking
+                encodedValue |= 1 << (nOfBitsPerValue-1);
+            }
 
-            if (nOfBitsPerValue > (32 - bitOffset) && normalArea[i] == arr[i]){
-                data[intIndex + 1] |= (arr[i] >> (32 - bitOffset));
-                
-            }   
-            if(nOfBitsPerValue > (32 - bitOffset) && normalArea[i] != arr[i]){
-                data[intIndex+1] |= 1<<bitOffset+nOfBitsPerValue-33;
-            } 
+            data[intIndex] |= (encodedValue << bitOffset);
+
+            if (nOfBitsPerValue > (32 - bitOffset) && intIndex + 1 < data.length){
+                data[intIndex + 1] |= (encodedValue >>> (32 - bitOffset));
+            }
     
         }
 
@@ -103,30 +100,39 @@ class OverflowBitPacking implements BitPacking{
         int intIndex = bitIndex/32;
         int bitOffset = bitIndex%32;
 
-        int value = (data[intIndex] & (((1 << nOfBitsPerValue)-1) << bitOffset))>> bitOffset;     
-        
-        
-        // Handle cross-integer bitpacked integers
-        if (nOfBitsPerValue > 32 - bitOffset){
-            int mask = (1 << (bitOffset + nOfBitsPerValue - 32))-1;
-            value &= ((1 << (32-bitOffset)) - 1); //In case value has leading ones caused by the operation >> bitOffet
-            value |= ((data[intIndex+1] & mask) << (32- bitOffset));
+        long lower = data[intIndex] & 0xFFFFFFFFL;
+        long combined = lower >>> bitOffset;
+
+        if (nOfBitsPerValue > 32 - bitOffset && intIndex + 1 < data.length){
+            int spillBits = nOfBitsPerValue - (32 - bitOffset);
+            long upper = data[intIndex+1] & 0xFFFFFFFFL;
+            long upperMask = (1L << spillBits) - 1;
+            combined |= (upper & upperMask) << (32 - bitOffset);
         }
-        
-        if((value >> (nOfBitsPerValue-1))==1){
-            // System.out.println(value);
-            value &= ((1 << (nOfBitsPerValue-1))-1);
-            int bitIndexOverflow = nOfBitsPerValueOverflow*value;
+
+        long valueMask = nOfBitsPerValue >= 32 ? 0xFFFFFFFFL : (1L << nOfBitsPerValue) - 1;
+        int value = (int) (combined & valueMask);
+
+        int indicatorBit = 1 << (nOfBitsPerValue-1);
+
+        if((value & indicatorBit)!=0){
+            int overflowIndex = value & (indicatorBit - 1);
+            int bitIndexOverflow = nOfBitsPerValueOverflow*overflowIndex;
             int intIndexOverflow = bitIndexOverflow/32;
             int bitOffsetOverflow = bitIndexOverflow % 32;
             
-            value = (dataOverflowArea[intIndexOverflow] & (((1 << nOfBitsPerValueOverflow)-1) << bitOffsetOverflow))>> bitOffsetOverflow;
-            // Handle cross-integer bitpacked integers
-            if (nOfBitsPerValueOverflow > 32 - bitOffsetOverflow){
-                int mask = (1 << (bitOffsetOverflow + nOfBitsPerValueOverflow - 32))-1;
-                value &= ((1 << (32-bitOffsetOverflow)) - 1); //In case value has leading ones caused by the operation >> bitOffet
-                value |= ((dataOverflowArea[intIndexOverflow+1] & mask) << (32- bitOffsetOverflow));
-            }  
+            long overflowLower = dataOverflowArea[intIndexOverflow] & 0xFFFFFFFFL;
+            long overflowCombined = overflowLower >>> bitOffsetOverflow;
+
+            if (nOfBitsPerValueOverflow > 32 - bitOffsetOverflow && intIndexOverflow + 1 < dataOverflowArea.length){
+                int overflowSpill = nOfBitsPerValueOverflow - (32 - bitOffsetOverflow);
+                long overflowUpper = dataOverflowArea[intIndexOverflow+1] & 0xFFFFFFFFL;
+                long overflowMask = (1L << overflowSpill) - 1;
+                overflowCombined |= (overflowUpper & overflowMask) << (32 - bitOffsetOverflow);
+            }
+
+            long overflowValueMask = nOfBitsPerValueOverflow >= 32 ? 0xFFFFFFFFL : (1L << nOfBitsPerValueOverflow) - 1;
+            value = (int) (overflowCombined & overflowValueMask);
         }
 
         return value;

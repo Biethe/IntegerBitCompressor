@@ -1,16 +1,18 @@
 import java.util.Arrays;
 
-public class NonCrossIntBitPacking {
-    private int[] data;
-    private int nOfBitsPerValue;
+public class NonCrossIntBitPacking implements BitPacking{
+    protected int[] data;
+    protected int nOfBitsPerValue;
 
 
-
+    @Override
     public void compress(int[] arr){
 
         int max = Arrays.stream(arr).max().getAsInt();
         nOfBitsPerValue = 32 - Integer.numberOfLeadingZeros(max);
-        int nOfIntegersPerInt = (32/nOfBitsPerValue);
+
+        int nOfIntegersPerInt = 32 / nOfBitsPerValue;
+
         int nOfRequiredIntegers = (arr.length + (nOfIntegersPerInt-1))/nOfIntegersPerInt;
         data = new int[nOfRequiredIntegers];
     
@@ -29,6 +31,7 @@ public class NonCrossIntBitPacking {
         }
     }
 
+    @Override
     public int get(int index) {
 
         int nOfvaluesPerInt = 32/nOfBitsPerValue;
@@ -41,6 +44,7 @@ public class NonCrossIntBitPacking {
         return value;
     }
 
+    @Override
     public void decompress(int[] arr){
         for(int i=0; i<arr.length; i++){
             arr[i] = get(i);

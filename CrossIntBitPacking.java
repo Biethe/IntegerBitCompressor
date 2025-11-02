@@ -1,9 +1,10 @@
 import java.util.Arrays;
 
-public class CrossIntBitPacking {
-    private int[] data;
-    private int nOfBitsPerValue;
+public class CrossIntBitPacking implements BitPacking{
+    protected int[] data;
+    protected  int nOfBitsPerValue;
 
+    @Override
     public void compress(int[] arr){
 
         int max = Arrays.stream(arr).max().getAsInt();
@@ -34,26 +35,27 @@ public class CrossIntBitPacking {
 
     }
 
-    
+    @Override
     public int get(int index) {
 
         int bitIndex = nOfBitsPerValue * index;
-        int byteIndex = bitIndex/32;
+        int intIndex = bitIndex/32;
         int bitOffset = bitIndex%32;
 
-        int value = (data[byteIndex] & (((1 << nOfBitsPerValue)-1) << bitOffset))>> bitOffset;     
+        int value = (data[intIndex] & (((1 << nOfBitsPerValue)-1) << bitOffset))>> bitOffset;     
         
         
         // Handle cross-integer bitpacked integers
         if (nOfBitsPerValue > 32 - bitOffset){
             int mask = (1 << (bitOffset + nOfBitsPerValue - 32))-1;
             value &= ((1 << (32-bitOffset)) - 1); //In case value has leading ones caused by the operation >> bitOffet
-            value |= ((data[byteIndex+1] & mask) << (32- bitOffset));
+            value |= ((data[intIndex+1] & mask) << (32- bitOffset));
         }
         
         return value;
     }
 
+    @Override
     public void decompress(int[] arr){
         for(int i=0; i<arr.length; i++){
             arr[i] = get(i);

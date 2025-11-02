@@ -1,60 +1,37 @@
 public class Main {
     public static void main(String[] args) {
         int[] arr = new int[20];
-        arr[0] = 7;
-        arr[1] = 9;
-        arr[2] = 14;
+        arr[0] = 7; 
+        arr[1] = 90000; 
+        arr[2] = 14; 
         arr[3] = 71;
-        arr[4] = 25;
-        arr[5] = 45;
-        arr[6] = 5;
-        arr[7] = 221;
-        arr[8] = 55;
-        arr[9] = 255;
-        arr[10] = 352;
-        arr[11] = 589;
-        arr[12] = 1;
-        arr[13] = 0;
+        arr[4] = 58; 
+        arr[5] = 45; 
+        arr[6] = 22;
+        arr[7] = 71; 
+        arr[8] = 40; 
+        arr[9] = 44; 
+        arr[10] = 32; 
+        arr[11] = 70;
+        arr[12] = 60;
+        arr[13] = 7;
         arr[14] = 55;
-        arr[15] = 87;
+        arr[15] = 69;
         arr[16] = 57;
-        arr[17] = 47;
-        arr[18] = 98;
-        arr[19] = 100;
+        arr[17] = 47; 
+        arr[18] = 9; 
+        arr[19] = 10;
+        
 
-        int[] dec_arr = new int[20];
+        int[] dec_arr = new int[arr.length];
 
-        CrossIntBitPacking bitpacker = new CrossIntBitPacking();
+        BitPacking comp = Compressor.createBitPacking(arr);
+        comp.compress(arr);
+        comp.decompress(dec_arr);
 
-        NonCrossIntBitPacking bitpacker1 = new NonCrossIntBitPacking();
-
-        bitpacker.compress(arr);
-        bitpacker.decompress(dec_arr);
-
-        for(int i=0; i<20; i++){
-            System.out.print(arr[i] + " ");
+        for (int i = 0; i < arr.length; i++) {
+            System.out.println(dec_arr[i]);
         }
-
-        System.out.println("Original array");
-
-        for(int i=0; i<20; i++){
-            System.out.print(dec_arr[i] + " ");
-        }
-
-        System.out.println("Decompressed array with overlapping integers");
-
-        bitpacker1.compress(arr);
-        bitpacker1.decompress(dec_arr);
-
-        for(int i=0; i<20; i++){
-            System.out.print(dec_arr[i] + " ");
-        }
-
-        System.out.println("Decompressed array with non-overlapping integers");
-
-
-                
-
 
     }
 }
